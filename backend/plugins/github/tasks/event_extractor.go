@@ -46,7 +46,9 @@ type IssueEvent struct {
 	Issue    struct {
 		Id int
 	}
-	GithubCreatedAt common.Iso8601Time `json:"created_at"`
+	RequestedReviewer *GithubAccountResponse `json:"requested_reviewer"`
+	RequestedTeam     *struct{ Slug string } `json:"requested_team"`
+	GithubCreatedAt   common.Iso8601Time     `json:"created_at"`
 }
 
 func ExtractApiEvents(taskCtx plugin.SubTaskContext) errors.Error {
@@ -72,6 +74,12 @@ func ExtractApiEvents(taskCtx plugin.SubTaskContext) errors.Error {
 				IssueId:         body.Issue.Id,
 				Type:            body.Event,
 				GithubCreatedAt: body.GithubCreatedAt.ToTime(),
+			}
+			if body.RequestedReviewer != nil {
+				githubIssueEvent.RequestedReviewerUsername = body.RequestedReviewer.Login
+			}
+			if body.RequestedTeam != nil {
+				githubIssueEvent.RequestedTeamSlug = body.RequestedTeam.Slug
 			}
 			if body.Actor != nil {
 				githubIssueEvent.AuthorUsername = body.Actor.Login
